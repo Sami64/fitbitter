@@ -48,21 +48,43 @@ class FitbitSpO2DataManager extends FitbitDataManager {
           spO2DataPoints.add(FitbitSpO2Data(
             userID: userId,
             dateOfMonitoring: DateTime.parse(record['dateTime']),
-            avgValue: record['value']['avg'].toDouble(),
-            minValue: record['value']['min'].toDouble(),
-            maxValue: record['value']['max'].toDouble(),
+            avgValue: _safeParseDouble(record['value']['avg']),
+            minValue: _safeParseDouble(record['value']['min']),
+            maxValue: _safeParseDouble(record['value']['max']),
           ));
         } // for entry
       } else {
         spO2DataPoints.add(FitbitSpO2Data(
           userID: userId,
           dateOfMonitoring: DateTime.parse(data['dateTime']),
-          avgValue: data['value']['avg'].toDouble(),
-          minValue: data['value']['min'].toDouble(),
-          maxValue: data['value']['max'].toDouble(),
+          avgValue: _safeParseDouble(data['value']['avg']),
+          minValue: _safeParseDouble(data['value']['min']),
+          maxValue: _safeParseDouble(data['value']['max']),
         ));
       }
     }
     return spO2DataPoints;
   } // _extractFitbitSpO2Data
+
+  // Helper method to safely parse values that might be strings, numbers, or ranges
+double? _safeParseDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  if (value is String) {
+    if (value.contains('-')) {
+      // Handle range values like "47-51"
+      final parts = value.split('-');
+      if (parts.length == 2) {
+        final min = double.tryParse(parts[0].trim());
+        final max = double.tryParse(parts[1].trim());
+        if (min != null && max != null) {
+          return (min + max) / 2; // Return the average of the range
+        }
+      }
+    }
+    // Try to parse as a regular double
+    return double.tryParse(value);
+  }
+  return null;
+}
 } // FitbitSpO2DataManager
