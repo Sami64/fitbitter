@@ -25,7 +25,7 @@ class FitbitCardioScoreData implements FitbitData {
   });
 
   // Helper method to parse VO2 Max values that might be ranges
-  static double? _parseVo2Max(dynamic vo2Max) {
+  static double? parseVo2Max(dynamic vo2Max) {
     if (vo2Max == null) return null;
     if (vo2Max is num) return vo2Max.toDouble();
     if (vo2Max is String) {
@@ -47,7 +47,7 @@ class FitbitCardioScoreData implements FitbitData {
   /// Generates a [FitbitCardioScoreData] obtained from a json.
   factory FitbitCardioScoreData.fromJson({required Map<String, dynamic> json}) {
     final vo2Max = json['value']['vo2Max'];
-    final calculatedValue = _parseVo2Max(vo2Max);
+    final calculatedValue = parseVo2Max(vo2Max);
     
     return FitbitCardioScoreData(
       userID: json['userID'],

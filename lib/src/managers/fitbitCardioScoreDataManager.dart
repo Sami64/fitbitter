@@ -42,7 +42,7 @@ class FitbitCardioScoreDataManager extends FitbitDataManager {
     if (data.isNotEmpty) {
       for (var record in data) {
         final vo2Max = record['value']['vo2Max'];
-        final calculatedValue = FitbitCardioScoreData._parseVo2Max(vo2Max);
+        final calculatedValue = FitbitCardioScoreData.parseVo2Max(vo2Max);
 
         cardioScoreDataPoints.add(FitbitCardioScoreData(
           userID: userId,
