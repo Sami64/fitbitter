@@ -108,40 +108,76 @@ class FitbitConnector {
 
   /// Method that checks if the current token is still valid to be used
   /// by the Fitbit APIs OAuth or it is expired.
-  static FutureOr<bool> isTokenValid(
-      {required FitbitCredentials fitbitCredentials}) async {
-    // Instantiate Dio and its Response
-    Dio dio = Dio();
-    late Response response;
+  static FutureOr<bool> isTokenValid({required FitbitCredentials fitbitCredentials}) async {
+  // Instantiate Dio and its Response
+  Dio dio = Dio();
+  Response? response;  // Make nullable instead of late
 
-    final fitbitUrl = FitbitAuthAPIURL.isTokenValid(
-        fitbitAccessToken: fitbitCredentials.fitbitAccessToken);
+  final fitbitUrl = FitbitAuthAPIURL.isTokenValid(
+      fitbitAccessToken: fitbitCredentials.fitbitAccessToken);
 
-    //Get the response
-    try {
-      response = await dio.post(
-        fitbitUrl.url,
-        data: fitbitUrl.data,
-        options: Options(
-          contentType: Headers.formUrlEncodedContentType,
-          headers: {
-            'Authorization': fitbitUrl.authorizationHeader,
-          },
-        ),
-      );
-    } on DioException catch (e) {
-      if (e.response!.statusCode == 401) {
-        return false;
-      }
-    }
-
-    // Debugging
+  // Get the response
+  try {
+    response = await dio.post(
+      fitbitUrl.url,
+      data: fitbitUrl.data,
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+        headers: {
+          'Authorization': fitbitUrl.authorizationHeader,
+        },
+      ),
+    );
+    
+    // Debugging - only log if response was successful
     final logger = Logger();
     logger.i('$response');
-
+    
     // get token status and return it
     return response.data['active'] as bool;
-  } // isTokenValid
+  } on DioException catch (e) {
+    // Any DioException means the token is invalid
+    return false;
+  } catch (e) {
+    // Any other exception also means the token validation failed
+    print('Error validating token: $e');
+    return false;
+  }
+}
+  // static FutureOr<bool> isTokenValid(
+  //     {required FitbitCredentials fitbitCredentials}) async {
+  //   // Instantiate Dio and its Response
+  //   Dio dio = Dio();
+  //   late Response response;
+
+  //   final fitbitUrl = FitbitAuthAPIURL.isTokenValid(
+  //       fitbitAccessToken: fitbitCredentials.fitbitAccessToken);
+
+  //   //Get the response
+  //   try {
+  //     response = await dio.post(
+  //       fitbitUrl.url,
+  //       data: fitbitUrl.data,
+  //       options: Options(
+  //         contentType: Headers.formUrlEncodedContentType,
+  //         headers: {
+  //           'Authorization': fitbitUrl.authorizationHeader,
+  //         },
+  //       ),
+  //     );
+  //   } on DioException catch (e) {
+  //     if (e.response!.statusCode == 401) {
+  //       return false;
+  //     }
+  //   }
+
+  //   // Debugging
+  //   final logger = Logger();
+  //   logger.i('$response');
+
+  //   // get token status and return it
+  //   return response.data['active'] as bool;
+  // } // isTokenValid
 
   /// Method that implements the OAuth 2.0 protocol and gets the access and refresh tokens from Fitbit APIs.
   static Future<FitbitCredentials?> authorize(

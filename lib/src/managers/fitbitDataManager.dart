@@ -64,15 +64,41 @@ abstract class FitbitDataManager {
 
   /// Method that check the validity of the current access token.
   Future<void> _checkAccessToken(FitbitAPIURL fitbitUrl) async {
-    //check if the access token is stil valid, if not refresh it
-    if (!await (FitbitConnector.isTokenValid(
-        fitbitCredentials: fitbitUrl.fitbitCredentials!))) {
-      await FitbitConnector.refreshToken(
+  try {
+    // Try to validate token
+    bool isValid = false;
+    try {
+      isValid = await FitbitConnector.isTokenValid(
+          fitbitCredentials: fitbitUrl.fitbitCredentials!);
+    } catch (e) {
+      // If token validation fails for any reason, assume it's invalid
+      print('Token validation error: $e');
+      isValid = false;
+    }
+    
+    // If token is invalid or validation failed, refresh it
+    if (!isValid) {
+      fitbitUrl.fitbitCredentials = await FitbitConnector.refreshToken(
           fitbitCredentials: fitbitUrl.fitbitCredentials!,
           clientID: clientID,
           clientSecret: clientSecret);
-    } // if
-  } //_checkAccessToken
+    }
+  } catch (e) {
+    // If refresh token also fails, propagate the error
+    print('Error refreshing token: $e');
+    throw Exception('Failed to refresh Fitbit token: $e');
+  }
+}
+  // Future<void> _checkAccessToken(FitbitAPIURL fitbitUrl) async {
+  //   //check if the access token is stil valid, if not refresh it
+  //   if (!await (FitbitConnector.isTokenValid(
+  //       fitbitCredentials: fitbitUrl.fitbitCredentials!))) {
+  //     await FitbitConnector.refreshToken(
+  //         fitbitCredentials: fitbitUrl.fitbitCredentials!,
+  //         clientID: clientID,
+  //         clientSecret: clientSecret);
+  //   } // if
+  // } //_checkAccessToken
 
   /// Method that manages errors that could return from the Fitbit API.
   static void manageError(DioException e) {
